@@ -1,0 +1,83 @@
+function endClose() {
+    $('#endereco').attr('disabled', 'disabled');
+    $("#bairro").attr('disabled', 'disabled');
+    $("#cidade").attr('disabled', 'disabled');
+    $("#estado").attr('disabled', 'disabled');
+    $("#change").removeAttr('checked');
+}
+
+function endOpen() {
+    $('#endereco').removeAttr('disabled');
+    $("#bairro").removeAttr('disabled');
+    $("#cidade").removeAttr('disabled');
+    $("#estado").removeAttr('disabled');
+}
+
+$('#cep').on('blur', function () {
+    if ($(this).val() != "" && $(this).val().length > 7) {
+        
+        //$("#loader").fadeIn("fast");
+
+
+        $.ajax({
+            //pegando a url apartir da action do form             
+            url: 'https://www.cscheckout.com/api/cep',
+            data: { cep: $(this).val().replace('-', '') },
+            type: 'POST',
+            dataType: "json",
+            beforeSend: function () {
+
+                // Mostra a mensagem de carregando
+                $("#loader").fadeIn("fast");
+                //                $("#loader").removeClass("hidden");
+
+            },
+            complete: function () {
+
+                // Oculta a mensagem carregando
+                $("#loader").fadeOut("slow");
+            },
+            success: function (data) {
+
+                //$.getJSON('Transactions.aspx?ID=ConsultaCEP&VAL=' + $(this).val().replace('-', '') + '', function (data) {
+
+                if (data) {
+                    if (data.status == '0') {
+                        //$("#cep").val('');
+                        //$("#cep").attr('placeholder', '');
+                        alert('CEP inválido ou inexistente, Por favor verificar');
+                        $("#loader").fadeOut("slow");
+                        endOpen();
+                        return false;
+                    } else {
+                        if ($.trim(data.logradouro) != '') {
+                            $('#endereco').attr('disabled', 'disabled');
+                            $('#cidade').attr('disabled', 'disabled');
+                        }
+                        $("#loader").fadeOut("slow");
+                    }
+
+                    $.trim($('#endereco').val(data.tipo_logradouro + ' ' + data.logradouro));
+                    $('#bairro').val(data.bairro);
+                    $('#cidade').val(data.cidade); endClose();
+                    $('#estado').val(data.uf).change();
+
+                    if ($.trim($('#endereco').val()) == "" || $.trim($('#bairro').val()) == "") {
+                        if ($.trim(data.logradouro) == "") {
+                            $('#endereco').removeAttr('disabled').removeClass('disabled');
+                            $('.alterar').fadeOut('fast');
+                        }
+                        if ($.trim(data.bairro) == "") {
+                            $('#bairro').removeAttr('disabled').removeClass('disabled');
+                            $('.alterar').fadeOut('fast');
+                        }
+                    } else {
+                        $('.alterar').css('display', 'initial');
+                    };
+                }
+            }
+        });
+    }
+});
+
+
